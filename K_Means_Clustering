@@ -1,0 +1,111 @@
+# Date: July 21, 2021
+# Author: Andrew Nowak
+
+#Callable: 
+  # K_Means(x, y, Num_Cent, max_its)
+# inputs:
+  # x = input list/array 1
+  # y = input list.array 2 (should be same length as x)
+  # Num_Cent = The Number of Centroids desried to cover data
+  # max_its = the number of iterations for the algorithm to search for final centroid placement
+#Outut:
+  # C = an Nx2 object, where N = # of centroids sepcified, containg the final location of centroid
+      # C[i,0] = Xi
+      # C[i,1] = Yi
+  # A plot of data and placement of centroids
+  
+# Description:
+# This is the culmination of several functions which get wrapped into a main function titled K_Means(). By calling K_Means, the algorithm will
+#initialize pts randomly on a plot of x vs y, and update them iteratively to represent the categorization of points based on the neeaest centorid
+# Additional points can then be categorized based on the centroid they fall closest too.
+
+# The following defined functions are included:
+   #array_stand() - a function to reduce the data to more workable scales.
+   #centroid() - intializes the object containing the locations of the centroids
+   #find_cent() - an iterative algorithm that will locate the final location of the centroids as the mean points of categorization
+   #K_Means() - callable, a function contining all functions listed above to be executed
+##############################################################################################################################################
+
+def array_stand(array_1,array_2):
+    array1_avg = np.average(array_1)
+    array1_std = np.std(array_1)
+    array1_fix=(array_1-array1_avg)/array1_std
+    
+    array2_avg = np.average(array_2)
+    array2_std = np.std(array_2)
+    array2_fix=(array_2-array2_avg)/array2_std
+
+    return array1_fix, array2_fix
+
+def centroid(n_cent,array_1,array_2):
+    cent = np.zeros((n_cent,2))
+    for i in range(len(cent)):
+        cent[i,0] = 2*max(array_1)*(random()-0.5)
+        cent[i,1] = 2*max(array_2)*(random()-0.5)
+    return cent
+
+def find_cent(max_its,array_1,array_2,cent,x,y):
+    it=0
+    while it < max_its:
+        #this needs to become some type of matrix
+        temp_cent = []
+        dist=[]
+        for i in range(len(array_1)):
+            #put values into matrix
+            list=[]
+            
+            for j in range(len(cent)):
+                d1 = np.sqrt((cent[j,0] - array_1[i])**2 + (cent[j,1] - array_2[i])**2)
+                list.append(d1)
+
+            mindex = list.index(min(list))
+            dist.append(min(list))
+            
+            #put into some kind of matrix
+            temp_cent.append((mindex,array_1[i],array_2[i]))
+            
+        for i in range(len(cent)):
+            cntx=0
+            cnty=0
+            n_elem=0
+            for j in range(len(temp_cent)):
+                if temp_cent[j][0] == i:
+                    cntx = cntx + temp_cent[j][1]
+                    cnty = cnty + temp_cent[j][2]
+                    n_elem = n_elem+1
+            if n_elem !=0:
+                cent[i,0] = cntx/n_elem
+                cent[i,1] = cnty/n_elem
+
+    
+        it=it+1
+    
+    array1_avg = np.average(x)
+    array1_std = np.std(x)
+    array2_avg = np.average(y)
+    array2_std = np.std(y)
+
+    #iterate for number of elements
+    for i in range(len(cent)):
+        cent[i,0] = (cent[i,0]*array1_std)+array1_avg
+        cent[i,1] = (cent[i,1]*array2_std)+array2_avg
+
+    avg_dist  = np.average(dist)
+
+    #iterative plot
+    plt.figure()
+    plt.plot(x,y,'k.')
+    for i in range(len(cent)):
+        plt.plot(cent[i,0],cent[i,1],'*',markersize = 10)
+    plt.title('Centroids')
+    plt.xlabel('Pitch Speed [mph]')
+    plt.ylabel('Movement[?]')
+    plt.grid()
+    #plt.show()
+    return cent, avg_dist
+
+def K_Means(x,y,Num_Cent,max_its):
+    A = array_stand(x,y)        ##array1_fix, array2_fix
+    B = centroid(Num_Cent,A[0],A[1])          ### cent, avg_dist
+    C = find_cent(max_its,A[0],A[1],B,x,y)
+    return C
